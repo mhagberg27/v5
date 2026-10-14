@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" class="size-1">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Van and MiFi Reservations | W&amp;L Athletics</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <!-- DISPLAY CONTROLS -->
+  <div class="display-bar">
+    <div class="wrap display-inner">
+      <span class="display-label">Make this page easier to read:</span>
+      <div class="btn-row" role="group" aria-label="Text size">
+        <span>Text size</span>
+        <button type="button" class="btn outline sq" data-size="1" aria-pressed="true">A</button>
+        <button type="button" class="btn outline sq size-2-label" data-size="2" aria-pressed="false">A+</button>
+        <button type="button" class="btn outline sq size-3-label" data-size="3" aria-pressed="false">A++</button>
+      </div>
+      <button type="button" class="btn outline" id="contrastBtn" aria-pressed="false">High contrast: Off</button>
+      <button type="button" class="btn outline" id="darkBtn" aria-pressed="false">Dark mode: Off</button>
+      <button type="button" class="btn outline" id="motionBtn" aria-pressed="false">Reduce motion: Off</button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div>
+        <p class="eyebrow">W&amp;L Physical Education and Athletics</p>
+        <h1>Van and MiFi Reservations</h1>
+        <div id="authArea" class="auth-area"></div>
+      </div>
+      <div class="header-actions">
+        <button id="mineBtn" class="btn gold big on-blue" type="button">Modify or Cancel Reservation</button>
+        <button id="reserveBtn" class="btn green big on-blue" type="button">Reserve a van or MiFi</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <div id="demoBanner" class="banner" hidden>
+      Demo mode: sample data, saved only in this browser. Add your Google Apps Script web app URL in config.js to go live.
+    </div>
+
+    <section class="how" aria-labelledby="howHeading">
+      <h2 id="howHeading">How it works</h2>
+      <ol class="how-steps">
+        <li><span class="num-badge" aria-hidden="true">1</span><p>Pick your dates below and see what is open. Reservations are for full days.</p></li>
+        <li><span class="num-badge" aria-hidden="true">2</span><p>Press a green <strong>Reserve</strong> button for a van, a MiFi, or both. First come, first served. You get a reservation number right away.</p></li>
+        <li><span class="num-badge" aria-hidden="true">3</span><p>When you are back, scan the QR code in the van and return the keys to the Admin Suite.</p></li>
+      </ol>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="What do you want to reserve?">
+      <button type="button" role="tab" id="tabVans" class="tab" aria-selected="true" aria-controls="panel" data-tab="vans">Vans</button>
+      <button type="button" role="tab" id="tabMifi" class="tab" aria-selected="false" aria-controls="panel" data-tab="mifi" tabindex="-1">MiFi hotspots</button>
+    </div>
+
+    <div class="controls">
+      <fieldset class="range-field">
+        <legend>Show dates</legend>
+        <label for="listFrom">From
+          <input type="date" id="listFrom">
+        </label>
+        <label for="listTo">To
+          <input type="date" id="listTo">
+        </label>
+      </fieldset>
+      <div class="btn-row" role="group" aria-label="Show as">
+        <button type="button" class="btn outline" data-view="table" aria-pressed="true">Table</button>
+        <button type="button" class="btn outline" data-view="cards" aria-pressed="false">Cards</button>
+        <button type="button" class="btn outline" data-view="calendar" aria-pressed="false">Calendar</button>
+      </div>
+    </div>
+    <p id="status" class="status" role="status"></p>
+
+    <section id="panel" role="tabpanel" aria-labelledby="tabVans">
+      <p id="panelIntro" class="intro"></p>
+
+      <div id="tableView"></div>
+      <div id="cardsView" class="card-grid" hidden></div>
+
+      <div id="calendarView" hidden>
+        <div class="section-head">
+          <h2 id="calHeading" aria-live="polite">Month</h2>
+          <div class="btn-row">
+            <button type="button" class="btn outline" id="prevMonth" aria-label="Previous month">&#8249; Prev</button>
+            <button type="button" class="btn outline" id="todayBtn">Today</button>
+            <button type="button" class="btn outline" id="nextMonth" aria-label="Next month">Next &#8250;</button>
+          </div>
+        </div>
+        <div class="cal-head" aria-hidden="true">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div id="calGrid" class="cal-grid"></div>
+        <div class="day-panel">
+          <h3 id="dayHeading">Day</h3>
+          <div id="dayDetail"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="help-line">Plans changed? Press the gold <strong>Modify or Cancel Reservation</strong> button at the top. A van and MiFi booked together are modified or cancelled together. Questions, or a problem with a van or MiFi? Email <a href="mailto:athletics@wlu.edu">athletics@wlu.edu</a>.</p>
+  </main>
+
+  <!-- BOOKING / CHANGE: ONE STEP AT A TIME -->
+  <dialog id="bookDialog" aria-labelledby="bookTitle">
+    <form id="bookForm" novalidate>
+      <div class="dialog-head">
+        <h2 id="bookTitle">Reserve a van or MiFi</h2>
+        <button type="button" class="btn outline icon" id="closeBook" aria-label="Close">&times;</button>
+      </div>
+      <ol id="steps" class="steps" aria-label="Steps"></ol>
+      <p id="signedInAs" class="hint" hidden></p>
+      <div id="wizBody" class="wiz-body"></div>
+      <p id="formError" class="error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn outline" id="backBtn">Back</button>
+        <button type="submit" class="btn green" id="nextBtn">Next</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- CHANGE OR CANCEL -->
+  <dialog id="mineDialog" aria-labelledby="mineTitle">
+    <div class="mine-wrap">
+      <div class="dialog-head">
+        <h2 id="mineTitle">Modify or Cancel Reservation</h2>
+        <button type="button" class="btn outline icon" id="closeMine" aria-label="Close">&times;</button>
+      </div>
+      <p>These are your upcoming reservations. A van and MiFi booked together are one reservation, so modifying or cancelling it applies to both.</p>
+      <form id="mineLookup" class="mine-lookup" novalidate hidden>
+        <label for="mineEmail">Your W&amp;L email (the one you booked with)
+          <input type="email" id="mineEmail" autocomplete="email" placeholder="name@wlu.edu">
+        </label>
+        <button type="submit" class="btn blue">Find my reservations</button>
+      </form>
+      <p id="mineStatus" class="hint" role="status"></p>
+      <ul id="mineList" class="mine-list"></ul>
+      <p class="note-box"><strong>Modify</strong> lets you pick new dates or a different van or MiFi, and shows what is open. <strong>Cancel</strong> asks you to confirm first. A trip already under way can't be cancelled here; just return the van and scan the QR code.</p>
+      <p class="hint">Questions? Email <a href="mailto:athletics@wlu.edu">athletics@wlu.edu</a>.</p>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <!-- Microsoft sign-in library (MSAL) -->
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
